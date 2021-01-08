@@ -13,33 +13,7 @@ module RailsOptimizer
 			end
 		end
 
-		def self.scoped proc
-			return proc.call if proc
-			all
-		end
-
-		def self.finded obj, relation_name
-			fk = foreign_key(obj, relation_name)
-			find(obj.read_attribute(fk.to_sym)) unless obj.read_attribute(fk.to_sym).blank?
-		end
-
-		def self.foreign_key(obj, relation_name)
-			obj.class.reflections[relation_name.to_s].foreign_key
-		end
-
-		def self.belongs_to(name, scope = nil, **options)
-			super
-			define_method name.to_s do |*args|
-				super if args.empty?
-				klass = if options[:polymorphic]
-					read_attribute("#{name}_type".to_sym)
-				else
-					name.to_s
-				end.classify.constantize.select(*args).scoped(scope).finded(self, name)
-			end
-		end
-
-	  def self.has_one(name, scope = nil, **options)
+		def self.has_one(name, scope = nil, **options)
 			super
 			define_method name.to_s do |*args|
 				fk = self.class.foreign_key(name).to_sym
@@ -50,5 +24,44 @@ module RailsOptimizer
 				end
 			end
 		end
+
+		def self.belongs_to(name, scope = nil, **options)
+			super
+			_define(name, scope, options)
+		end
+
+		private
+
+			def self.scoped proc
+				return proc.call if proc
+				all
+			end
+
+			def self.finded obj, relation_name
+				fk = foreign_key(obj, relation_name)
+				find(obj.read_attribute(fk.to_sym)) unless obj.read_attribute(fk.to_sym).blank?
+			end
+
+			def self.foreign_key(obj, relation_name)
+				obj.class.reflections[relation_name.to_s].foreign_key
+			end
+
+			
+
+			def self._define(name, scope=nil, **options)
+				define_method name.to_s do |*args|
+					klass = if options[:polymorphic]
+						read_attribute("#{name}_type".to_sym).constantize
+					else
+						_reflections[name.to_s].klass
+					end
+					if args.empty?
+						klass.select('*').scoped(scope).finded(self, name)
+					else
+						klass.select(*args).scoped(scope).finded(self, name)
+					end
+				end
+			end
+	  	
 	end
 end
