@@ -30,7 +30,7 @@ module RailsOptimizer
 		def self.belongs_to(name, scope = nil, **options)
 			super
 			define_method name.to_s do |*args|
-				super if arsg.empty?
+				super if args.empty?
 				klass = if options[:polymorphic]
 					read_attribute("#{name}_type".to_sym)
 				else
