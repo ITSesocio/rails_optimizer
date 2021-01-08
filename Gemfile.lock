@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rails_optimizer (0.1.1)
+    rails_optimizer (0.1.2)
       activerecord
       activesupport
 
