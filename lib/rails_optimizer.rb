@@ -2,6 +2,8 @@ require "rails_optimizer/version"
 
 module RailsOptimizer
   class Error < StandardError; end
+  extend ActiveSupport::Concern
+
   included do
 		def save
 			if has_changes_to_save?
