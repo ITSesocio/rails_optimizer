@@ -1,4 +1,6 @@
 require "rails_optimizer/version"
+require "rails_optimizer/belongs_to"
+require "rails_optimizer/reflection"
 
 module RailsOptimizer
   class Error < StandardError; end
@@ -27,41 +29,12 @@ module RailsOptimizer
 
 		def self.belongs_to(name, scope = nil, **options)
 			super
-			_define(name, scope, options)
+			RailsOptimizer::BelongsTo._define(self, name)
 		end
 
-		private
-
-			def self.scoped proc
-				return proc.call if proc
-				all
-			end
-
-			def self.finded obj, relation_name
-				fk = foreign_key(obj, relation_name)
-				find(obj.read_attribute(fk.to_sym)) unless obj.read_attribute(fk.to_sym).blank?
-			end
-
-			def self.foreign_key(obj, relation_name)
-				obj.class.reflections[relation_name.to_s].foreign_key
-			end
-
-			
-
-			def self._define(name, scope=nil, **options)
-				define_method name.to_s do |*args|
-					klass = if options[:polymorphic]
-						read_attribute("#{name}_type".to_sym).constantize
-					else
-						_reflections[name.to_s].klass
-					end
-					if args.empty?
-						klass.select('*').scoped(scope).finded(self, name)
-					else
-						klass.select(*args).scoped(scope).finded(self, name)
-					end
-				end
-			end
+		def self.execute(&block)
+			block.call(self) || all 
+		end
 	  	
 	end
 end
