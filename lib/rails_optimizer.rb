@@ -1,5 +1,7 @@
 require "rails_optimizer/version"
+require "rails_optimizer/association"
 require "rails_optimizer/belongs_to"
+require "rails_optimizer/has_one"
 require "rails_optimizer/reflection"
 
 module RailsOptimizer
@@ -17,14 +19,7 @@ module RailsOptimizer
 
 		def self.has_one(name, scope = nil, **options)
 			super
-			define_method name.to_s do |*args|
-				fk = self.class.foreign_key(name).to_sym
-				if args.empty?
-					name.to_s.classify.constantize.select("*").scoped(scope).find_by(fk => id)
-				else
-					name.to_s.classify.constantize.select(:id, *args).scoped(scope).find_by(fk => id)
-				end
-			end
+			RailsOptimizer::HasOne._define(self,name)
 		end
 
 		def self.belongs_to(name, scope = nil, **options)
@@ -32,8 +27,9 @@ module RailsOptimizer
 			RailsOptimizer::BelongsTo._define(self, name)
 		end
 
-		def self.execute(&block)
-			block.call(self) || all 
+		def self.execute(&method)
+			return all unless block_given?
+			class_eval(&method)
 		end
 	  	
 	end

@@ -1,12 +1,5 @@
 module RailsOptimizer
-	class BelongsTo
-		attr_accessor :klass, :name, :args, :reflection, :owner
-
-		def initialize(owner, name, *args)
-			@owner = owner
-			@name  = name.to_s
-			@args  = *args
-		end
+	class BelongsTo < Association
 
 		def self._define(owner, name )
 			owner.__send__(:define_method, name) do |*args|
@@ -20,25 +13,15 @@ module RailsOptimizer
 			else
 				klass.select(*args)
 			end
-				.execute{reflection_scope}
-				.execute{ |obj| finded(obj)}
+				.execute(&reflection_scope)
+				.execute(&finded)
 		end
 
 		private
-			def reflection
-				@reflection ||= RailsOptimizer::Reflection.new(owner, name)
-			end
-
-			def klass
-				reflection.klass
-			end
-
-			def reflection_scope
-				reflection.scope
-			end
-
-			def finded(obj)
-				obj.find( owner.read_attribute(foreign_key) )
+			
+			def finded
+				id = owner.read_attribute(foreign_key)
+				proc { send(:find, id) }
 			end
 
 			def foreign_key
