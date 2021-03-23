@@ -9,9 +9,9 @@ module RailsOptimizer
   extend ActiveSupport::Concern
 
   included do
-		def save
+		def save(args=nil)
 			if has_changes_to_save?
-				super
+				super(args)
 			else
 				true
 			end
