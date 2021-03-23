@@ -9,11 +9,13 @@ module RailsOptimizer
 		end
 
 		def get_target
-			if args.empty?
-				klass
-			else
-				klass.select(*args)
-			end.execute(&reflection_scope).execute(&finded)
+			super do
+				if args.empty?
+					klass
+				else
+					klass.select(*args)
+				end.execute(&reflection_scope).execute(&finded)
+			end
 		end
 
 		private
@@ -24,12 +26,4 @@ module RailsOptimizer
 			end
 	end
 
-	define_method name.to_s do |*args|
-				fk = self.class.foreign_key(name).to_sym
-				if args.empty?
-					name.to_s.classify.constantize.select("*").scoped(scope).find_by(fk => id)
-				else
-					name.to_s.classify.constantize.select(:id, *args).scoped(scope).find_by(fk => id)
-				end
-			end
 end

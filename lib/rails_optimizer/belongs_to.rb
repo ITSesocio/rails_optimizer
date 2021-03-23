@@ -8,20 +8,22 @@ module RailsOptimizer
 		end
 
 		def get_target
-			if args.empty?
-				klass
-			else
-				klass.select(*args)
+			super do
+				if args.empty?
+					klass
+				else
+					klass.select(*args)
+				end
+					.execute(&reflection_scope)
+					.execute(&finded)
 			end
-				.execute(&reflection_scope)
-				.execute(&finded)
 		end
 
 		private
 			
 			def finded
 				id = owner.read_attribute(foreign_key)
-				proc { send(:find, id) }
+				proc { send(:find_by, {id: id}) }
 			end
 
 			def foreign_key
