@@ -9,14 +9,7 @@ module RailsOptimizer
   extend ActiveSupport::Concern
 
   included do
-		def save(args=nil)
-			if has_changes_to_save?
-				super(args)
-			else
-				true
-			end
-		end
-
+		
 		def self.has_one(name, scope = nil, **options)
 			super
 			RailsOptimizer::HasOne._define(self,name)
